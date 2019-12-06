@@ -24,18 +24,18 @@ router.get("/", async (request, response) => {
  * @param {number} id
  * @returns {Object}
  */
-/*
-find(): calling find returns a promise that resolves to an array of all the posts contained in the database.
-findById(): this method expects an id as it's only parameter and returns the post corresponding to the id provided or an empty array if no post with that id is found.
+router.get("/:id", async (request, response) => {
+   try {
+      const data = await db.findById(request.params.id);
 
-When the client makes a GET request to /api/posts:
-   If there's an error in retrieving the posts from the database:
-      cancel the request.
-      respond with HTTP status code 500.
-      return the following JSON object: { error: "The posts information could not be retrieved." }.
-*/
-router.get("/:id", (request, response) => {
-   
+      if (!data || data.length === 0) {
+         return response.status(404).json({ message: "The post with the specified ID does not exist." });
+      }
+
+      response.json(data);
+   } catch (error) {
+      response.status(500).json({ error: "The post information could not be retrieved." });
+   }
 });
 
 /**
@@ -45,5 +45,18 @@ router.get("/:id", (request, response) => {
  * @param {number} id
  * @returns {Array}
  */
+/*
+findById(): this method expects an id as it's only parameter and returns the post corresponding to the id provided or an empty array if no post with that id is found.
+
+When the client makes a GET request to /api/posts/:id:
+   If the post with the specified id is not found:
+      return HTTP status code 404 (Not Found).
+      return the following JSON object: { message: "The post with the specified ID does not exist." }.
+
+   If there's an error in retrieving the post from the database:
+      cancel the request.
+      respond with HTTP status code 500.
+      return the following JSON object: { error: "The post information could not be retrieved." }.
+*/
 
 module.exports = router;
