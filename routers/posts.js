@@ -46,17 +46,33 @@ router.get("/:id", async (request, response) => {
  * @returns {Array}
  */
 /*
-findById(): this method expects an id as it's only parameter and returns the post corresponding to the id provided or an empty array if no post with that id is found.
+findPostComments(): the findPostComments accepts a postId as its first parameter and returns all comments on the post associated with the post id.
 
-When the client makes a GET request to /api/posts/:id:
+When the client makes a GET request to /api/posts/:id/comments:
    If the post with the specified id is not found:
       return HTTP status code 404 (Not Found).
       return the following JSON object: { message: "The post with the specified ID does not exist." }.
 
-   If there's an error in retrieving the post from the database:
+   If there's an error in retrieving the comments from the database:
       cancel the request.
       respond with HTTP status code 500.
-      return the following JSON object: { error: "The post information could not be retrieved." }.
+      return the following JSON object: { error: "The comments information could not be retrieved." }.
 */
+router.get("/:id/comments", async (request, response) => {
+
+   try {
+      //does the post exist?
+      const post = await db.findById(request.params.id);
+      if (!post || post.length === 0) {
+         return response.status(404).json({ message: "The post with the specified ID does not exist." });
+      }
+
+      //Yes, get the comments
+      const data = await db.findPostComments(request.params.id);
+      response.json(data);
+   } catch (error) {
+      response.status(500).json({ error: "The comments information could not be retrieved." });
+   }
+});
 
 module.exports = router;
