@@ -4,6 +4,8 @@ const postsRouter = require("./routers/posts");
 //App instance
 const app = express();
 
+//middleware
+app.use(express.json());
 //endpoint routers
 app.use("/api/posts", postsRouter);
 

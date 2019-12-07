@@ -19,6 +19,28 @@ router.get("/", async (request, response) => {
 });
 
 /**
+ * POST	/api/posts
+ * Creates a post using the information sent inside the request body.
+ * @param {String} title 
+ * @param {String} contents
+ * @returns {Object}
+ */
+router.post("/", async (request, response) => {
+   try {
+      if (!request.body.title || !request.body.contents) {
+         return response.status(400).json({ errorMessage: "Please provide title and contents for the post." });
+      }
+
+      const {id} = await db.insert(request.body);
+      const [newPost] = await db.findById(id);
+
+      response.status(201).json(newPost);
+   } catch (error) {
+      response.status(500).json({ error: "There was an error while saving the post to the database" });
+   }
+});
+
+/**
  * GET	/api/posts/:id
  * Returns the post object with the specified id.
  * @param {number} id
@@ -45,19 +67,6 @@ router.get("/:id", async (request, response) => {
  * @param {number} id
  * @returns {Array}
  */
-/*
-findPostComments(): the findPostComments accepts a postId as its first parameter and returns all comments on the post associated with the post id.
-
-When the client makes a GET request to /api/posts/:id/comments:
-   If the post with the specified id is not found:
-      return HTTP status code 404 (Not Found).
-      return the following JSON object: { message: "The post with the specified ID does not exist." }.
-
-   If there's an error in retrieving the comments from the database:
-      cancel the request.
-      respond with HTTP status code 500.
-      return the following JSON object: { error: "The comments information could not be retrieved." }.
-*/
 router.get("/:id/comments", async (request, response) => {
 
    try {
@@ -74,5 +83,24 @@ router.get("/:id/comments", async (request, response) => {
       response.status(500).json({ error: "The comments information could not be retrieved." });
    }
 });
+/*
+insert(): calling insert passing it a post object will add it to the database and return an object with the id of the inserted post. The object looks like this: { id: 123 }.
+
+When the client makes a POST request to /api/posts:
+   If the request body is missing the title or contents property:
+      cancel the request.
+      respond with HTTP status code 400 (Bad Request).
+      return the following JSON response: { errorMessage: "Please provide title and contents for the post." }.
+
+   If the information about the post is valid:
+      save the new post the the database.
+      return HTTP status code 201 (Created).
+      return the newly created post.
+
+   If there's an error while saving the post:
+      cancel the request.
+      respond with HTTP status code 500 (Server Error).
+      return the following JSON object: { error: "There was an error while saving the post to the database" }.
+*/
 
 module.exports = router;
