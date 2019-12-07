@@ -19,28 +19,6 @@ router.get("/", async (request, response) => {
 });
 
 /**
- * POST	/api/posts
- * Creates a post using the information sent inside the request body.
- * @param {String} title 
- * @param {String} contents
- * @returns {Object}
- */
-router.post("/", async (request, response) => {
-   try {
-      if (!request.body.title || !request.body.contents) {
-         return response.status(400).json({ errorMessage: "Please provide title and contents for the post." });
-      }
-
-      const {id} = await db.insert(request.body);
-      const [newPost] = await db.findById(id);
-
-      response.status(201).json(newPost);
-   } catch (error) {
-      response.status(500).json({ error: "There was an error while saving the post to the database" });
-   }
-});
-
-/**
  * GET	/api/posts/:id
  * Returns the post object with the specified id.
  * @param {number} id
@@ -85,6 +63,28 @@ router.get("/:id/comments", async (request, response) => {
 });
 
 /**
+ * POST	/api/posts
+ * Creates a post using the information sent inside the request body.
+ * @param {String} title 
+ * @param {String} contents
+ * @returns {Object}
+ */
+router.post("/", async (request, response) => {
+   try {
+      if (!request.body.title || !request.body.contents) {
+         return response.status(400).json({ errorMessage: "Please provide title and contents for the post." });
+      }
+
+      const {id} = await db.insert(request.body);
+      const [newPost] = await db.findById(id);
+
+      response.status(201).json(newPost);
+   } catch (error) {
+      response.status(500).json({ error: "There was an error while saving the post to the database" });
+   }
+});
+
+/**
  * POST	/api/posts/:id/comments
  * Creates a comment for the post with the specified id using information sent 
  * inside of the request body.
@@ -117,38 +117,52 @@ router.post("/:post_id/comments", async (request, response) => {
    }
 });
 
+/**
+ * DELETE	/api/posts/:id
+ * Removes the post with the specified id and returns the deleted post object. 
+ * You may need to make additional calls to the database in order to satisfy 
+ * this requirement.
+ * @param {number} id
+ * @returns {Object}
+ */
+router.delete("/:id", async (request, response) => {
+   try {
+      //Does the post exist?
+      const [oldPost] = await db.findById(request.params.id);
+      if (!oldPost) {
+         return response.status(404).json({ message: "The post with the specified ID does not exist." });
+      }
+
+      //Delete the post
+      console.log(`Deleting post: ${oldPost.id}`);
+      const num = await db.remove(oldPost.id);
+      console.log(`Removed ${num} files`);
+      response.json(oldPost);
+   } catch (error) {
+      response.status(500).json({ error: "The post could not be removed" });
+   }
+});
+
 /*
-/api/posts/:id/comments
-insertComment(): calling insertComment while passing it a comment object will add it to the database and return an object with the id of the inserted comment. The object looks like this: { id: 123 }. This method will throw an error if
-findCommentById(): accepts an id and returns the comment associated with that id.
+findById(): this method expects an id as it's only parameter and returns the post corresponding to the id provided or an empty array if no post with that id is found.
+remove(): the remove method accepts an id as its first parameter and upon successfully deleting the post from the database it returns the number of records deleted.
 
 {
-   text: "The text of the comment", // String, required
-   post_id: "The id of the associated post", // Integer, required, must match the id of a post entry in the database
+   title: "The post title", // String, required
+   contents: "The post contents", // String, required
    created_at: Mon Aug 14 2017 12:50:16 GMT-0700 (PDT) // Date, defaults to current date
    updated_at: Mon Aug 14 2017 12:50:16 GMT-0700 (PDT) // Date, defaults to current date
 }
 
-
-When the client makes a POST request to /api/posts/:id/comments:
-   If the post with the specified id is not found:
-      return HTTP status code 404 (Not Found).
-      return the following JSON object: { message: "The post with the specified ID does not exist." }.
-
-   If the request body is missing the text property:
-      cancel the request.
-      respond with HTTP status code 400 (Bad Request).
-      return the following JSON response: { errorMessage: "Please provide text for the comment." }.
-
-   If the information about the comment is valid:
-      save the new comment the the database.
-      return HTTP status code 201 (Created).
-      return the newly created comment.
-
-   If there's an error while saving the comment:
-      cancel the request.
-      respond with HTTP status code 500 (Server Error).
-      return the following JSON object: { error: "There was an error while saving the comment to the database" }.
+When the client makes a DELETE request to /api/posts/:id:
+   // If the post with the specified id is not found:
+   //    return HTTP status code 404 (Not Found).
+   //    return the following JSON object: { message: "The post with the specified ID does not exist." }.
+   
+   // If there's an error in removing the post from the database:
+   //    cancel the request.
+   //    respond with HTTP status code 500.
+   //    return the following JSON object: { error: "The post could not be removed" }.
 */
 
 module.exports = router;
