@@ -7,12 +7,12 @@ const router = express.Router();
 /**
  * GET	/api/posts
  * Returns an array of all the post objects contained in the database.
- * @returns {Array}
+ * @returns {Array} all the posts
  */
 router.get("/", async (request, response) => {
    try {
-      const data = await db.find();
-      response.json(data);
+      const allPosts = await db.find();
+      response.json(allPosts);
    } catch (error) {
       response.status(500).json({ error: "The posts information could not be retrieved." });
    }
@@ -21,18 +21,18 @@ router.get("/", async (request, response) => {
 /**
  * GET	/api/posts/:id
  * Returns the post object with the specified id.
- * @param {number} id
- * @returns {Object}
+ * @param {number} post_id
+ * @returns {Object} the post with the specified id
  */
-router.get("/:id", async (request, response) => {
+router.get("/:post_id", async (request, response) => {
    try {
-      const [data] = await db.findById(request.params.id);
+      const [post] = await db.findById(request.params.post_id);
 
-      if (!data) {
+      if (!post) {
          return response.status(404).json({ message: "The post with the specified ID does not exist." });
       }
 
-      response.json(data);
+      response.json(post);
    } catch (error) {
       response.status(500).json({ error: "The post information could not be retrieved." });
    }
@@ -42,21 +42,21 @@ router.get("/:id", async (request, response) => {
  * GET	/api/posts/:id/comments
  * Returns an array of all the comment objects associated with the post with 
  * the specified id.
- * @param {number} id
- * @returns {Array}
+ * @param {number} post_id
+ * @returns {Array} all of the comments for the post with 
  */
-router.get("/:id/comments", async (request, response) => {
+router.get("/:post_id/comments", async (request, response) => {
 
    try {
       //does the post exist?
-      const [post] = await db.findById(request.params.id);
+      const [post] = await db.findById(request.params.post_id);
       if (!post) {
          return response.status(404).json({ message: "The post with the specified ID does not exist." });
       }
 
       //Yes, get the comments
-      const data = await db.findPostComments(request.params.id);
-      response.json(data);
+      const allComments = await db.findPostComments(post.id);
+      response.json(allComments);
    } catch (error) {
       response.status(500).json({ error: "The comments information could not be retrieved." });
    }
@@ -65,9 +65,9 @@ router.get("/:id/comments", async (request, response) => {
 /**
  * POST	/api/posts
  * Creates a post using the information sent inside the request body.
- * @param {String} title 
- * @param {String} contents
- * @returns {Object}
+ * @param {string} title 
+ * @param {string} contents
+ * @returns {Object} the new post
  */
 router.post("/", async (request, response) => {
    try {
@@ -88,8 +88,8 @@ router.post("/", async (request, response) => {
  * POST	/api/posts/:id/comments
  * Creates a comment for the post with the specified id using information sent 
  * inside of the request body.
- * @param {number} id
- * @returns {Object}
+ * @param {number} post_id
+ * @returns {Object} the new comment
  */
 router.post("/:post_id/comments", async (request, response) => {
    try {
@@ -122,13 +122,13 @@ router.post("/:post_id/comments", async (request, response) => {
  * Removes the post with the specified id and returns the deleted post object. 
  * You may need to make additional calls to the database in order to satisfy 
  * this requirement.
- * @param {number} id
- * @returns {Object}
+ * @param {number} post_id
+ * @returns {Object} the post that was deleted
  */
-router.delete("/:id", async (request, response) => {
+router.delete("/:post_id", async (request, response) => {
    try {
       //Does the post exist?
-      const [oldPost] = await db.findById(request.params.id);
+      const [oldPost] = await db.findById(request.params.post_id);
       if (!oldPost) {
          return response.status(404).json({ message: "The post with the specified ID does not exist." });
       }
@@ -143,26 +143,37 @@ router.delete("/:id", async (request, response) => {
    }
 });
 
-/*
-findById(): this method expects an id as it's only parameter and returns the post corresponding to the id provided or an empty array if no post with that id is found.
-remove(): the remove method accepts an id as its first parameter and upon successfully deleting the post from the database it returns the number of records deleted.
+/**
+ * PUT	/api/posts/:id
+ * Updates the post with the specified id using data from the request body. 
+ * Returns the modified document, NOT the original.
+ * @param {number} id
+ * @param {Object} postUpdate
+ * @returns {Object} The modified post
+ */
+router.put("/:id", async (request, response) => {
+   try {
+      if (!request.body.title || !request.body.contents) {
+         return response.status(400).json({ errorMessage: "Please provide title and contents for the post." });
+      }
 
-{
-   title: "The post title", // String, required
-   contents: "The post contents", // String, required
-   created_at: Mon Aug 14 2017 12:50:16 GMT-0700 (PDT) // Date, defaults to current date
-   updated_at: Mon Aug 14 2017 12:50:16 GMT-0700 (PDT) // Date, defaults to current date
-}
+      //Is there a post to update?
+      let [post] = await db.findById(request.params.id);
+      if (!post) {
+         return response.status(404).json({ message: "The post with the specified ID does not exist." });
+      }
 
-When the client makes a DELETE request to /api/posts/:id:
-   // If the post with the specified id is not found:
-   //    return HTTP status code 404 (Not Found).
-   //    return the following JSON object: { message: "The post with the specified ID does not exist." }.
-   
-   // If there's an error in removing the post from the database:
-   //    cancel the request.
-   //    respond with HTTP status code 500.
-   //    return the following JSON object: { error: "The post could not be removed" }.
-*/
+      //Update the post
+      console.log(`Updating post id-${post.id}`);
+      const num = await db.update(post.id, request.body);
+      console.log("done");
+      
+      //get new post and return to user
+      [post] = await db.findById(post.id);
+      response.json(post);
+   } catch (error) {
+      response.status(500).json({ error: "The post information could not be modified." });
+   }
+});
 
 module.exports = router;
