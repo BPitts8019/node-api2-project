@@ -1,21 +1,13 @@
 const express = require("express");
+const welcomeRouter = require("./routes/welcome");
+const postsRouter = require("./routes/posts");
 
 const server = express();
 
 //support JSON input for the server endpoints
 server.use(express.json());
-
-//Root endpoint
-server.get("/", (req, res) => {
-   res.send(`<h1>The Blog Spot</h1>`);
-});
-
-//Root API endpoint
-server.get("/api", (req, res) => {
-   res.json({
-      message: "Blog Spot API is active.",
-   });
-});
+server.use(welcomeRouter);
+server.use("/api/posts", postsRouter);
 
 //404 Not Found
 server.use((req, res) => {
