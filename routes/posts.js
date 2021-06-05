@@ -6,13 +6,9 @@ const router = express.Router();
 /*
 Method	Endpoint	Description
 POST	/api/posts/:id/comments	Creates a comment for the post with the specified id using information sent inside of the request body.
-GET	/api/posts/:id	Returns the post object with the specified id.
 GET	/api/posts/:id/comments	Returns an array of all the comment objects associated with the post with the specified id.
 DELETE	/api/posts/:id	Removes the post with the specified id and returns the deleted post object. You may need to make additional calls to the database in order to satisfy this requirement.
 PUT	/api/posts/:id	Updates the post with the specified id using data from the request body. Returns the modified document, NOT the original.
-
-
-
 */
 router.post("/", async (req, res) => {
    if (!req.body.title || !req.body.contents) {
@@ -31,7 +27,7 @@ router.post("/", async (req, res) => {
       res.status(201).json(newPost);
    } catch (error) {
       res.status(500).json({
-         error: "There was an error while saving the post to the database",
+         error: "There was an error while saving the post to the database.",
       });
    }
 });
@@ -43,6 +39,26 @@ router.get("/", async (req, res) => {
    } catch (error) {
       res.status(500).json({
          error: "The posts information could not be retrieved.",
+      });
+   }
+});
+
+router.get("/:id", async (req, res) => {
+   const { id } = req.params;
+
+   try {
+      const [post] = await postsDb.findById(id);
+      if (post) {
+         res.json(post);
+         return;
+      }
+
+      res.status(404).json({
+         message: "The post with the specified ID does not exist.",
+      });
+   } catch (error) {
+      res.status(500).json({
+         error: "The post information could not be retrieved.",
       });
    }
 });
