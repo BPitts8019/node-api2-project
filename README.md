@@ -77,7 +77,7 @@ Configure the API to handle to the following routes:
 | Method                    | Endpoint                | Description                                                          |
 | ------------------------- | ----------------------- | -------------------------------------------------------------------- |
 | :heavy_check_mark: POST   | /api/posts              | Creates a post using the information sent inside the `request body`. |
-|                    POST   | /api/posts/:id/comments | Creates a comment for the post with the specified id using information sent inside of the `request body`.                                                                                           |
+| :heavy_check_mark: POST   | /api/posts/:id/comments | Creates a comment for the post with the specified id using information sent inside of the `request body`.                                                                                           |
 | :heavy_check_mark: GET    | /api/posts              | Returns an array of all the post objects contained in the database.  |
 | :heavy_check_mark: GET    | /api/posts/:id          | Returns the post object with the specified id.                       |
 | :heavy_check_mark: GET    | /api/posts/:id/comments | Returns an array of all the comment objects associated with the post with the specified id.                                                                                                       |
