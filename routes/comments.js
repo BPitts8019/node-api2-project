@@ -1,4 +1,5 @@
 const express = require("express");
+const db = require("../data/db");
 
 const router = express.Router({
    mergeParams: true,
@@ -41,9 +42,25 @@ If there's an error in retrieving the comments from the database:
    respond with HTTP status code 500.
    return the following JSON object: { error: "The comments information could not be retrieved." }.
 */
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
    const { id } = req.params;
-   res.json({ message: `It Works! ${id}` });
+
+   try {
+      const [post] = await db.findById(id);
+      if (!post) {
+         res.status(404).json({
+            message: "The post with the specified ID does not exist.",
+         });
+         return;
+      }
+
+      const comments = await db.findPostComments(id);
+      res.json(comments);
+   } catch (error) {
+      res.status(500).json({
+         error: "The comments information could not be retrieved.",
+      });
+   }
 });
 
 module.exports = router;
